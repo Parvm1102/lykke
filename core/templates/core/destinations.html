@@ -1,0 +1,175 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Destinations - Lykke Travel{% endblock %}
+
+{% block extra_css %}
+<style>
+    .destination-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .destination-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    }
+    
+    .destination-overlay {
+        background: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.7) 100%);
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 20px;
+        color: white;
+    }
+    
+    .filter-section {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-radius: 15px;
+        margin-bottom: 2rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Page Header -->
+    <div class="row mb-5">
+        <div class="col-12 text-center">
+            <h1 class="text-white fw-bold mb-3">
+                <i class="fas fa-globe"></i> Explore Destinations
+            </h1>
+            <p class="text-white-50 lead">Choose your next adventure from our amazing destinations</p>
+        </div>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="filter-section p-4 mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h5 class="text-white mb-3">
+                    <i class="fas fa-filter"></i> Filter Destinations
+                </h5>
+                <form method="get" class="row g-3">
+                    <div class="col-md-4">
+                        <input type="text" class="form-control" placeholder="Search destination..." 
+                               name="search" value="{{ request.GET.search }}">
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select" name="travel_type">
+                            <option value="">All Travel Types</option>
+                            <option value="flight" {% if request.GET.travel_type == 'flight' %}selected{% endif %}>Flight</option>
+                            <option value="train" {% if request.GET.travel_type == 'train' %}selected{% endif %}>Train</option>
+                            <option value="bus" {% if request.GET.travel_type == 'bus' %}selected{% endif %}>Bus</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <input type="date" class="form-control" name="date" value="{{ request.GET.date }}">
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-search"></i> Filter
+                        </button>
+                    </div>
+                </form>
+            </div>
+            <div class="col-md-4 text-end">
+                <p class="text-white mb-0">
+                    <i class="fas fa-map-marked-alt"></i> 
+                    Found {{ destinations|length }} destination{{ destinations|length|pluralize }}
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Destinations Grid -->
+    {% if destinations %}
+    <div class="row g-4">
+        {% for destination in destinations %}
+        <div class="col-lg-4 col-md-6">
+            <div class="card h-100 destination-card" style="border-radius: 20px; overflow: hidden;">
+                {% if destination.primary_image %}
+                <div class="position-relative">
+                    <div class="card-img-top" style="height: 250px; background-image: url('{{ destination.primary_image.image_url }}'); background-size: cover; background-position: center;">
+                    </div>
+                    <div class="destination-overlay">
+                        <div class="d-flex justify-content-between align-items-end">
+                            <div>
+                                <h5 class="fw-bold mb-1">{{ destination.name|title }}</h5>
+                                <p class="mb-0 small opacity-75">
+                                    <i class="fas fa-route"></i> From {{ destination.sample_option.source }}
+                                </p>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge bg-primary fs-6">From ₹{{ destination.min_price }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="position-relative">
+                    <div class="card-img-top bg-gradient d-flex align-items-center justify-content-center" 
+                         style="height: 250px; background: linear-gradient(45deg, #667eea, #764ba2);">
+                        <i class="fas fa-image text-white" style="font-size: 4rem; opacity: 0.3;"></i>
+                    </div>
+                    <div class="destination-overlay">
+                        <div class="d-flex justify-content-between align-items-end">
+                            <div>
+                                <h5 class="fw-bold mb-1">{{ destination.name|title }}</h5>
+                                <p class="mb-0 small opacity-75">
+                                    <i class="fas fa-route"></i> From {{ destination.sample_option.source }}
+                                </p>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge bg-white text-primary fs-6">From ₹{{ destination.min_price }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <div class="card-body p-4">
+                    <div class="mb-3">
+                        <h6 class="text-muted mb-2">Available Travel Options:</h6>
+                        {% for travel_type in destination.travel_types %}
+                            <span class="badge bg-light text-dark me-1 mb-1">
+                                {% if travel_type == 'flight' %}
+                                    <i class="fas fa-plane"></i> Flight
+                                {% elif travel_type == 'train' %}
+                                    <i class="fas fa-train"></i> Train
+                                {% elif travel_type == 'bus' %}
+                                    <i class="fas fa-bus"></i> Bus
+                                {% endif %}
+                            </span>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="d-grid">
+                        <a href="{% url 'destination_detail' destination.name %}" class="btn btn-primary">
+                            <i class="fas fa-eye"></i> View Details & Book
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <!-- No destinations found -->
+    <div class="text-center py-5">
+        <div class="card">
+            <div class="card-body p-5">
+                <i class="fas fa-search text-muted" style="font-size: 4rem; opacity: 0.3;"></i>
+                <h3 class="text-muted mt-3">No Destinations Found</h3>
+                <p class="text-muted">Try adjusting your search criteria or check back later for new destinations.</p>
+                <a href="{% url 'destinations' %}" class="btn btn-primary">
+                    <i class="fas fa-refresh"></i> Clear Filters
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

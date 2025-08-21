@@ -1,0 +1,113 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Profile - Lykke Travel{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h3 class="card-title mb-0">
+                    <i class="fas fa-user-circle"></i> My Profile
+                </h3>
+            </div>
+            <div class="card-body p-4">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5 class="text-primary mb-3">
+                            <i class="fas fa-info-circle"></i> Personal Information
+                        </h5>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-user"></i> Full Name
+                            </label>
+                            <p class="form-control-plaintext">{{ user.first_name }} {{ user.last_name }}</p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-at"></i> Username
+                            </label>
+                            <p class="form-control-plaintext">{{ user.username }}</p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-envelope"></i> Email
+                            </label>
+                            <p class="form-control-plaintext">{{ user.email }}</p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-phone"></i> Phone Number
+                            </label>
+                            <p class="form-control-plaintext">{{ profile.phone_number|default:"Not provided" }}</p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-birthday-cake"></i> Date of Birth
+                            </label>
+                            <p class="form-control-plaintext">{{ profile.date_of_birth|default:"Not provided" }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <h5 class="text-primary mb-3">
+                            <i class="fas fa-map-marker-alt"></i> Address Information
+                        </h5>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-road"></i> Street Address
+                            </label>
+                            <p class="form-control-plaintext">{{ profile.street_address|default:"Not provided" }}</p>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-6">
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">
+                                        <i class="fas fa-city"></i> City
+                                    </label>
+                                    <p class="form-control-plaintext">{{ profile.city|default:"Not provided" }}</p>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">
+                                        <i class="fas fa-mail-bulk"></i> Pin Code
+                                    </label>
+                                    <p class="form-control-plaintext">{{ profile.pin_code|default:"Not provided" }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-globe"></i> Country
+                            </label>
+                            <p class="form-control-plaintext">{{ profile.country|default:"Not provided" }}</p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-calendar"></i> Member Since
+                            </label>
+                            <p class="form-control-plaintext">{{ user.date_joined|date:"F d, Y" }}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="text-center mt-4">
+                    <a href="{% url 'edit_profile' %}" class="btn btn-primary">
+                        <i class="fas fa-edit"></i> Edit Profile
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

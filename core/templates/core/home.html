@@ -1,0 +1,186 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Home - Lykke Travel{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="hero-section">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <h1>Welcome to Lykke Travel</h1>
+                <p class="lead">Your journey begins here. Discover amazing destinations and book your perfect trip with ease.</p>
+                {% if not user.is_authenticated %}
+                <div class="d-flex justify-content-center gap-3">
+                    <a href="{% url 'register' %}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-user-plus"></i> Get Started
+                    </a>
+                    <a href="{% url 'login' %}" class="btn btn-outline-light btn-lg">
+                        <i class="fas fa-sign-in-alt"></i> Sign In
+                    </a>
+                </div>
+                {% else %}
+                <div class="d-flex justify-content-center gap-3">
+                    <a href="{% url 'destinations' %}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-search"></i> Search Trips
+                    </a>
+                    <a href="#" class="btn btn-outline-light btn-lg">
+                        <i class="fas fa-ticket-alt"></i> My Bookings
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Features Section -->
+<div class="container py-5">
+    <div class="row">
+        <div class="col-12 text-center mb-5">
+            <h2 class="text-white fw-bold">Why Choose Lykke Travel?</h2>
+            <p class="text-white-50">Experience the best in travel booking</p>
+        </div>
+    </div>
+    
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card h-100 text-center p-4">
+                <div class="card-body">
+                    <div class="mb-3">
+                        <i class="fas fa-plane text-primary" style="font-size: 3rem;"></i>
+                    </div>
+                    <h4 class="card-title">Multiple Options</h4>
+                    <p class="card-text">Choose from flights, trains, and buses to reach your destination in comfort.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card h-100 text-center p-4">
+                <div class="card-body">
+                    <div class="mb-3">
+                        <i class="fas fa-lock text-primary" style="font-size: 3rem;"></i>
+                    </div>
+                    <h4 class="card-title">Secure Booking</h4>
+                    <p class="card-text">Your personal and payment information is protected with top-level security.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card h-100 text-center p-4">
+                <div class="card-body">
+                    <div class="mb-3">
+                        <i class="fas fa-headset text-primary" style="font-size: 3rem;"></i>
+                    </div>
+                    <h4 class="card-title">24/7 Support</h4>
+                    <p class="card-text">Our dedicated support team is here to help you anytime, anywhere.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if user.is_authenticated %}
+<!-- Quick Actions for Logged-in Users -->
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card">
+                <div class="card-body p-4">
+                    <h3 class="card-title text-center mb-4">
+                        <i class="fas fa-bolt text-primary"></i> Quick Actions
+                    </h3>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <a href="{% url 'destinations' %}" class="btn btn-outline-primary w-100 p-3">
+                                <i class="fas fa-search fs-4 d-block mb-2"></i>
+                                Search Travel Options
+                            </a>
+                        </div>
+                        <div class="col-md-6">
+                            <a href="#" class="btn btn-outline-primary w-100 p-3">
+                                <i class="fas fa-history fs-4 d-block mb-2"></i>
+                                View My Bookings
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Featured Destinations Section -->
+{% if featured_destinations %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-12 text-center mb-5">
+            <h2 class="text-white fw-bold">Featured Destinations</h2>
+            <p class="text-white-50">Discover amazing places to visit</p>
+        </div>
+    </div>
+    
+    <div class="row g-4">
+        {% for destination in featured_destinations %}
+        <div class="col-lg-4 col-md-6">
+            <div class="card h-100 destination-card" style="border-radius: 20px; overflow: hidden;">
+                {% if destination.primary_image %}
+                <div class="card-img-top" style="height: 200px; background-image: url('{{ destination.primary_image.image_url }}'); background-size: cover; background-position: center;">
+                    <div class="position-absolute top-0 end-0 m-3">
+                        <span class="badge bg-primary">From ₹{{ destination.min_price }}</span>
+                    </div>
+                </div>
+                {% else %}
+                <div class="card-img-top bg-gradient" style="height: 200px; background: linear-gradient(45deg, #667eea, #764ba2); display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-image text-white" style="font-size: 3rem; opacity: 0.5;"></i>
+                    <div class="position-absolute top-0 end-0 m-3">
+                        <span class="badge bg-white text-primary">From ₹{{ destination.min_price }}</span>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <div class="card-body p-4">
+                    <h5 class="card-title fw-bold text-primary">
+                        <i class="fas fa-map-marker-alt"></i> {{ destination.name|title }}
+                    </h5>
+                    
+                    <div class="mb-3">
+                        {% for travel_type in destination.travel_types %}
+                            <span class="badge bg-light text-dark me-1">
+                                {% if travel_type == 'flight' %}
+                                    <i class="fas fa-plane"></i> Flight
+                                {% elif travel_type == 'train' %}
+                                    <i class="fas fa-train"></i> Train
+                                {% elif travel_type == 'bus' %}
+                                    <i class="fas fa-bus"></i> Bus
+                                {% endif %}
+                            </span>
+                        {% endfor %}
+                    </div>
+                    
+                    <p class="card-text text-muted">
+                        <i class="fas fa-route"></i> From {{ destination.sample_option.source }}
+                    </p>
+                    
+                    <div class="text-center">
+                        <a href="{% url 'destination_detail' destination.name %}" class="btn btn-primary w-100">
+                            <i class="fas fa-eye"></i> View Details
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <div class="text-center mt-4">
+        <a href="{% url 'destinations' %}" class="btn btn-outline-light btn-lg">
+            <i class="fas fa-globe"></i> View All Destinations
+        </a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
