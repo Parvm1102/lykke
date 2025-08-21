@@ -1,0 +1,419 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}My Bookings - Lykke{% endblock %}
+
+{% block extra_css %}
+<style>
+    .bookings-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    
+    .page-header {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+    
+    .page-header h2 {
+        color: #333;
+        margin-bottom: 10px;
+    }
+    
+    .page-header p {
+        color: #666;
+        font-size: 1.1em;
+    }
+    
+    .booking-card {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        margin-bottom: 25px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+    
+    .booking-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    }
+    
+    .booking-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px;
+        position: relative;
+    }
+    
+    .booking-status {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-size: 0.85em;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+    
+    .status-confirmed {
+        background: rgba(40, 167, 69, 0.9);
+    }
+    
+    .status-pending {
+        background: rgba(255, 193, 7, 0.9);
+    }
+    
+    .status-cancelled {
+        background: rgba(220, 53, 69, 0.9);
+    }
+    
+    .booking-title {
+        font-size: 1.3em;
+        font-weight: 600;
+        margin-bottom: 10px;
+        padding-right: 120px;
+    }
+    
+    .booking-id {
+        font-size: 0.9em;
+        opacity: 0.9;
+    }
+    
+    .booking-body {
+        padding: 25px;
+    }
+    
+    .booking-info {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 25px;
+    }
+    
+    .info-item {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .info-label {
+        font-size: 0.85em;
+        color: #666;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 5px;
+    }
+    
+    .info-value {
+        font-size: 1.1em;
+        color: #333;
+        font-weight: 600;
+    }
+    
+    .passengers-section {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+        margin: 20px 0;
+    }
+    
+    .passengers-title {
+        font-weight: 600;
+        margin-bottom: 15px;
+        color: #333;
+    }
+    
+    .passenger-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 15px;
+    }
+    
+    .passenger-item {
+        background: white;
+        padding: 15px;
+        border-radius: 8px;
+        border-left: 4px solid #667eea;
+    }
+    
+    .passenger-name {
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 5px;
+    }
+    
+    .passenger-details {
+        color: #666;
+        font-size: 0.9em;
+    }
+    
+    .booking-actions {
+        border-top: 1px solid #f0f0f0;
+        padding-top: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    
+    .total-amount {
+        font-size: 1.2em;
+        font-weight: bold;
+        color: #667eea;
+    }
+    
+    .btn-outline-primary {
+        border: 2px solid #667eea;
+        color: #667eea;
+        padding: 8px 20px;
+        border-radius: 20px;
+        font-weight: 600;
+        background: transparent;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        font-size: 0.9em;
+    }
+    
+    .btn-outline-primary:hover {
+        background: #667eea;
+        color: white;
+        text-decoration: none;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #666;
+    }
+    
+    .empty-state i {
+        font-size: 4em;
+        color: #ddd;
+        margin-bottom: 20px;
+    }
+    
+    .empty-state h3 {
+        margin-bottom: 15px;
+        color: #999;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        padding: 12px 30px;
+        border-radius: 25px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        text-decoration: none;
+        color: white;
+    }
+    
+    .filter-tabs {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 30px;
+        background: #f8f9fa;
+        border-radius: 25px;
+        padding: 5px;
+    }
+    
+    .filter-tab {
+        padding: 10px 25px;
+        border-radius: 20px;
+        background: transparent;
+        border: none;
+        font-weight: 600;
+        color: #666;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .filter-tab.active {
+        background: #667eea;
+        color: white;
+    }
+    
+    @media (max-width: 768px) {
+        .bookings-container {
+            padding: 10px;
+        }
+        
+        .booking-info {
+            grid-template-columns: 1fr;
+        }
+        
+        .passenger-list {
+            grid-template-columns: 1fr;
+        }
+        
+        .booking-actions {
+            flex-direction: column;
+            align-items: stretch;
+            text-align: center;
+        }
+        
+        .filter-tabs {
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .filter-tab {
+            flex: 1;
+            min-width: 100px;
+            margin: 2px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="bookings-container">
+    <div class="page-header">
+        <h2>My Bookings</h2>
+        <p>Track and manage all your travel bookings</p>
+    </div>
+    
+    {% if bookings %}
+        <!-- Filter Tabs -->
+        <div class="filter-tabs">
+            <button class="filter-tab active" data-status="all">All Bookings</button>
+            <button class="filter-tab" data-status="confirmed">Confirmed</button>
+            <button class="filter-tab" data-status="pending">Pending</button>
+            <button class="filter-tab" data-status="cancelled">Cancelled</button>
+        </div>
+        
+        <!-- Bookings List -->
+        <div id="bookings-list">
+            {% for booking in bookings %}
+                <div class="booking-card" data-status="{{ booking.status }}">
+                    <div class="booking-header">
+                        <div class="booking-status status-{{ booking.status }}">
+                            {{ booking.get_status_display }}
+                        </div>
+                        <div class="booking-title">{{ booking.travel_option.operator_name }} - {{ booking.travel_option.get_travel_type_display }}</div>
+                        <div class="booking-id">Booking ID: {{ booking.booking_id }}</div>
+                    </div>
+                    
+                    <div class="booking-body">
+                        <div class="booking-info">
+                            <div class="info-item">
+                                <div class="info-label">From → To</div>
+                                <div class="info-value">{{ booking.travel_option.source }} → {{ booking.travel_option.destination }}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Departure Date</div>
+                                <div class="info-value">{{ booking.travel_option.departure_date|date:"M d, Y" }}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Travel Type</div>
+                                <div class="info-value">{{ booking.travel_option.get_travel_type_display }}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Booked On</div>
+                                <div class="info-value">{{ booking.booking_date|date:"M d, Y" }}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="passengers-section">
+                            <div class="passengers-title">
+                                Passengers ({{ booking.number_of_seats }})
+                            </div>
+                            <div class="passenger-list">
+                                {% for passenger in booking.passengers.all %}
+                                    <div class="passenger-item">
+                                        <div class="passenger-name">{{ passenger.first_name }} {{ passenger.last_name }}</div>
+                                        <div class="passenger-details">
+                                            Age: {{ passenger.age }} | {{ passenger.get_gender_display }}
+                                            {% if passenger.seat_number %}
+                                                <br>Seat: {{ passenger.seat_number }}
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        {% if booking.special_requirements %}
+                        <div class="info-item">
+                            <div class="info-label">Special Requirements</div>
+                            <div class="info-value">{{ booking.special_requirements }}</div>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="booking-actions">
+                            <div class="total-amount">
+                                Total: ₹{{ booking.total_price|floatformat:0 }}
+                            </div>
+                            <div>
+                                <a href="{% url 'booking_confirmation' booking.booking_id %}" class="btn-outline-primary">
+                                    <i class="fas fa-eye"></i> View Details
+                                </a>
+                                {% if booking.status == 'confirmed' %}
+                                    <a href="{% url 'destination_detail' booking.travel_option.destination %}" class="btn-outline-primary">
+                                        <i class="fas fa-map-marker-alt"></i> View Destination
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <!-- Empty State -->
+        <div class="empty-state">
+            <i class="fas fa-suitcase-rolling"></i>
+            <h3>No bookings yet</h3>
+            <p>Start your journey by exploring our amazing destinations!</p>
+            <a href="{% url 'destinations' %}" class="btn btn-primary">
+                <i class="fas fa-search"></i> Explore Destinations
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const filterTabs = document.querySelectorAll('.filter-tab');
+    const bookingCards = document.querySelectorAll('.booking-card');
+    
+    filterTabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+            const status = this.getAttribute('data-status');
+            
+            // Update active tab
+            filterTabs.forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Filter bookings
+            bookingCards.forEach(card => {
+                const cardStatus = card.getAttribute('data-status');
+                if (status === 'all' || cardStatus === status) {
+                    card.style.display = 'block';
+                    setTimeout(() => {
+                        card.style.opacity = '1';
+                        card.style.transform = 'translateY(0)';
+                    }, 10);
+                } else {
+                    card.style.opacity = '0';
+                    card.style.transform = 'translateY(-10px)';
+                    setTimeout(() => {
+                        card.style.display = 'none';
+                    }, 300);
+                }
+            });
+        });
+    });
+});
+</script>
+{% endblock %}

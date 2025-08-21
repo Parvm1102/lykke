@@ -9,7 +9,14 @@ from django.views.generic import CreateView
 from django import forms
 from django.db.models import Min, Q
 from django.utils import timezone
-from .models import UserProfile, TravelOption, TravelOptionDetail, TravelOptionImage
+from django.conf import settings
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+import razorpay
+import json
+import uuid
+from .models import UserProfile, TravelOption, TravelOptionDetail, TravelOptionImage, Booking, Passenger
+from .forms import BookingForm, PassengerFormSet
 
 
 class UserRegistrationForm(UserCreationForm):
@@ -223,4 +230,185 @@ def destination_detail_view(request, destination):
         'destination_details': destination_details,
         'selected_date': selected_date,
         'selected_type': selected_type,
+    })
+
+
+@login_required
+@login_required
+def book_travel_view(request, travel_id):
+    """Booking page for a specific travel option"""
+    travel_option = get_object_or_404(TravelOption, travel_id=travel_id)
+    
+    if request.method == 'POST':
+        booking_form = BookingForm(request.POST)
+        passenger_formset = PassengerFormSet(request.POST)
+        
+        if booking_form.is_valid() and passenger_formset.is_valid():
+            # Create booking
+            booking = booking_form.save(commit=False)
+            booking.user = request.user
+            booking.travel_option = travel_option
+            booking.total_price = travel_option.price_per_seat * booking.number_of_seats
+            booking.status = 'pending'
+            booking.payment_status = 'pending'
+            booking.save()
+            
+            # Create passengers
+            for passenger_form in passenger_formset:
+                if passenger_form.cleaned_data and not passenger_form.cleaned_data.get('DELETE', False):
+                    passenger = passenger_form.save(commit=False)
+                    passenger.booking = booking
+                    passenger.save()
+            
+            # Redirect to payment
+            return redirect('payment', booking_id=booking.booking_id)
+        else:
+            # Add error messages for debugging
+            for field, errors in booking_form.errors.items():
+                for error in errors:
+                    messages.error(request, f"Booking {field}: {error}")
+            
+            for i, form in enumerate(passenger_formset):
+                for field, errors in form.errors.items():
+                    for error in errors:
+                        messages.error(request, f"Passenger {i+1} {field}: {error}")
+    else:
+        booking_form = BookingForm()
+        passenger_formset = PassengerFormSet()
+    
+    return render(request, 'core/booking.html', {
+        'travel_option': travel_option,
+        'booking_form': booking_form,
+        'passenger_formset': passenger_formset,
+    })
+
+
+@login_required
+def payment_view(request, booking_id):
+    """Payment page using Razorpay"""
+    booking = get_object_or_404(Booking, booking_id=booking_id, user=request.user)
+    
+    # Initialize Razorpay client
+    client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+    
+    # Create Razorpay order
+    razorpay_order = client.order.create({
+        'amount': int(booking.total_price * 100),  # Amount in paise
+        'currency': 'INR',
+        'receipt': booking.booking_id,
+        'payment_capture': 1
+    })
+    
+    booking.transaction_id = razorpay_order['id']
+    booking.save()
+    
+    context = {
+        'booking': booking,
+        'razorpay_order': razorpay_order,
+        'razorpay_key_id': settings.RAZORPAY_KEY_ID,
+        'user': request.user,
+    }
+    
+    return render(request, 'core/payment.html', context)
+
+
+@csrf_exempt
+@csrf_exempt
+def payment_success_view(request):
+    """Handle successful payment callback from Razorpay"""
+    if request.method == 'POST':
+        try:
+            # Get payment details from Razorpay
+            payment_id = request.POST.get('razorpay_payment_id')
+            order_id = request.POST.get('razorpay_order_id')
+            signature = request.POST.get('razorpay_signature')
+            booking_id = request.POST.get('booking_id')
+            
+            print(f"Payment success data: payment_id={payment_id}, order_id={order_id}, booking_id={booking_id}")
+            
+            if not all([payment_id, order_id, signature, booking_id]):
+                messages.error(request, 'Missing payment information. Please try again.')
+                return redirect('home')
+            
+            # Verify payment signature
+            client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+            
+            # Get booking using booking_id - don't require user session for callback
+            try:
+                booking = Booking.objects.get(booking_id=booking_id)
+                # Verify that the order_id matches our transaction_id
+                if booking.transaction_id != order_id:
+                    print(f"Order ID mismatch: expected {booking.transaction_id}, got {order_id}")
+                    messages.error(request, 'Payment order mismatch. Please contact support.')
+                    return redirect('home')
+            except Booking.DoesNotExist:
+                print(f"Booking not found for booking_id: {booking_id}")
+                messages.error(request, 'Booking not found. Please contact support.')
+                return redirect('home')
+            
+            # Verify signature
+            params_dict = {
+                'razorpay_order_id': order_id,
+                'razorpay_payment_id': payment_id,
+                'razorpay_signature': signature
+            }
+            
+            try:
+                client.utility.verify_payment_signature(params_dict)
+                
+                # Payment successful
+                booking.payment_status = 'completed'
+                booking.status = 'confirmed'
+                booking.payment_method = 'Razorpay'
+                booking.payment_date = timezone.now()
+                # Store payment ID in a separate field or append to transaction_id
+                booking.save()
+                
+                # Update available seats
+                travel_option = booking.travel_option
+                travel_option.available_seats -= booking.number_of_seats
+                travel_option.save()
+                
+                messages.success(request, 'Payment successful! Your booking is confirmed.')
+                return redirect('booking_confirmation', booking_id=booking.booking_id)
+                
+            except razorpay.errors.SignatureVerificationError:
+                booking.payment_status = 'failed'
+                booking.save()
+                messages.error(request, 'Payment verification failed. Please try again.')
+                return redirect('payment', booking_id=booking.booking_id)
+                
+        except Exception as e:
+            # Log the error for debugging
+            print(f"Payment processing error: {str(e)}")
+            print(f"POST data: {request.POST}")
+            messages.error(request, f'Payment processing error: {str(e)}')
+            # Try to redirect to payment page if we have booking_id
+            booking_id = request.POST.get('booking_id')
+            if booking_id:
+                return redirect('payment', booking_id=booking_id)
+            return redirect('home')
+    
+    return redirect('home')
+
+
+@login_required
+def booking_confirmation_view(request, booking_id):
+    """Booking confirmation page"""
+    booking = get_object_or_404(Booking, booking_id=booking_id, user=request.user)
+    passengers = booking.passengers.all()
+    
+    return render(request, 'core/booking_confirmation.html', {
+        'booking': booking,
+        'passengers': passengers,
+    })
+
+
+@login_required
+def my_bookings_view(request):
+    """User's booking history"""
+    bookings = Booking.objects.filter(user=request.user).order_by('-booking_date')
+    
+    return render(request, 'core/my_bookings.html', {
+        'bookings': bookings,
     })

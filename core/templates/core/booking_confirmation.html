@@ -1,0 +1,338 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}
+{% if booking.status == 'confirmed' %}
+    Booking Confirmed - Lykke
+{% elif booking.status == 'pending' %}
+    Booking Pending - Lykke
+{% else %}
+    Booking {{ booking.get_status_display }} - Lykke
+{% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .confirmation-container {
+        max-width: 700px;
+        margin: 0 auto;
+        padding: 20px;
+        text-align: center;
+    }
+    
+    .success-icon {
+        font-size: 5em;
+        margin-bottom: 20px;
+        animation: bounce 1s ease-in-out;
+    }
+    
+    .success-icon .fa-check-circle {
+        color: #28a745;
+    }
+    
+    .success-icon .fa-clock {
+        color: #ffc107;
+    }
+    
+    .success-icon .fa-times-circle {
+        color: #dc3545;
+    }
+    
+    @keyframes bounce {
+        0%, 20%, 50%, 80%, 100% {
+            transform: translateY(0);
+        }
+        40% {
+            transform: translateY(-20px);
+        }
+        60% {
+            transform: translateY(-10px);
+        }
+    }
+    
+    .confirmation-card {
+        background: white;
+        border-radius: 15px;
+        padding: 40px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        margin-bottom: 30px;
+    }
+    
+    .booking-details {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 25px;
+        margin: 30px 0;
+        text-align: left;
+    }
+    
+    .detail-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 15px;
+        padding: 8px 0;
+        border-bottom: 1px solid rgba(255,255,255,0.2);
+    }
+    
+    .detail-row:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        font-weight: bold;
+        font-size: 1.1em;
+        border-top: 1px solid rgba(255,255,255,0.3);
+        padding-top: 15px;
+    }
+    
+    .passenger-details {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+        margin: 20px 0;
+        text-align: left;
+    }
+    
+    .passenger-item {
+        padding: 10px 0;
+        border-bottom: 1px solid #dee2e6;
+    }
+    
+    .passenger-item:last-child {
+        border-bottom: none;
+    }
+    
+    .passenger-name {
+        font-weight: 600;
+        color: #333;
+    }
+    
+    .passenger-info {
+        color: #666;
+        font-size: 0.9em;
+        margin-top: 5px;
+    }
+    
+    .action-buttons {
+        margin-top: 30px;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        padding: 12px 30px;
+        border-radius: 25px;
+        font-weight: 600;
+        margin: 0 10px 10px 0;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+    
+    .btn-outline-primary {
+        border: 2px solid #667eea;
+        color: #667eea;
+        padding: 12px 30px;
+        border-radius: 25px;
+        font-weight: 600;
+        margin: 0 10px 10px 0;
+        background: transparent;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-outline-primary:hover {
+        background: #667eea;
+        color: white;
+        transform: translateY(-2px);
+    }
+    
+    .next-steps {
+        background: #e8f4f8;
+        border-left: 4px solid #17a2b8;
+        padding: 20px;
+        margin: 30px 0;
+        border-radius: 0 10px 10px 0;
+        text-align: left;
+    }
+    
+    .next-steps h5 {
+        color: #17a2b8;
+        margin-bottom: 15px;
+    }
+    
+    .next-steps ul {
+        margin: 0;
+        padding-left: 20px;
+    }
+    
+    .next-steps li {
+        margin-bottom: 8px;
+        color: #666;
+    }
+    
+    @media (max-width: 768px) {
+        .confirmation-container {
+            padding: 10px;
+        }
+        
+        .confirmation-card {
+            padding: 25px;
+        }
+        
+        .detail-row {
+            flex-direction: column;
+            text-align: center;
+        }
+        
+        .detail-row span:first-child {
+            margin-bottom: 5px;
+            opacity: 0.8;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="confirmation-container">
+    <div class="confirmation-card">
+        <div class="success-icon">
+            {% if booking.status == 'confirmed' %}
+                <i class="fas fa-check-circle"></i>
+            {% elif booking.status == 'pending' %}
+                <i class="fas fa-clock"></i>
+            {% else %}
+                <i class="fas fa-times-circle"></i>
+            {% endif %}
+        </div>
+        
+        {% if booking.status == 'confirmed' %}
+            <h2>Booking Confirmed!</h2>
+            <p class="lead">Your travel booking has been successfully confirmed. Get ready for an amazing journey!</p>
+        {% elif booking.status == 'pending' %}
+            <h2>Booking Pending</h2>
+            <p class="lead">Your booking is currently pending. Please complete the payment to confirm your booking.</p>
+        {% else %}
+            <h2>Booking {{ booking.get_status_display }}</h2>
+            <p class="lead">Your booking status: {{ booking.get_status_display }}</p>
+        {% endif %}
+        
+        <div class="booking-details">
+            <h4>Booking Details</h4>
+            
+            <div class="detail-row">
+                <span>Booking ID:</span>
+                <span><strong>{{ booking.booking_id }}</strong></span>
+            </div>
+            
+            <div class="detail-row">
+                <span>Destination:</span>
+                <span>{{ booking.travel_option.destination }}</span>
+            </div>
+            
+            <div class="detail-row">
+                <span>Travel Package:</span>
+                <span>{{ booking.travel_option.operator_name }} - {{ booking.travel_option.get_travel_type_display }}</span>
+            </div>
+            
+            <div class="detail-row">
+                <span>Departure Date:</span>
+                <span>{{ booking.travel_option.departure_date|date:"F d, Y" }}</span>
+            </div>
+            
+            <div class="detail-row">
+                <span>Departure Time:</span>
+                <span>{{ booking.travel_option.departure_time }}</span>
+            </div>
+            
+            <div class="detail-row">
+                <span>Number of Seats:</span>
+                <span>{{ booking.number_of_seats }}</span>
+            </div>
+            
+            <div class="detail-row">
+                <span>Total Amount Paid:</span>
+                <span>₹{{ booking.total_price|floatformat:0 }}</span>
+            </div>
+        </div>
+        
+        <div class="passenger-details">
+            <h5>Passenger Information</h5>
+            {% for passenger in booking.passengers.all %}
+                <div class="passenger-item">
+                    <div class="passenger-name">{{ passenger.first_name }} {{ passenger.last_name }}</div>
+                    <div class="passenger-info">
+                        Age: {{ passenger.age }} | Gender: {{ passenger.get_gender_display }}
+                        {% if passenger.seat_number %}
+                            | Seat: {{ passenger.seat_number }}
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        
+        {% if booking.special_requirements %}
+        <div class="next-steps">
+            <h5>Special Requirements</h5>
+            <p>{{ booking.special_requirements }}</p>
+        </div>
+        {% endif %}
+        
+        {% if booking.status == 'confirmed' %}
+        <div class="next-steps">
+            <h5>What's Next?</h5>
+            <ul>
+                <li>A confirmation email has been sent to your registered email address</li>
+                <li>You'll receive travel documents and itinerary 7 days before your trip</li>
+                <li>Our team will contact you 48 hours before departure with final details</li>
+                <li>Keep your booking ID handy for any future reference</li>
+                <li>Check your email for travel guidelines and packing list</li>
+            </ul>
+        </div>
+        {% elif booking.status == 'pending' %}
+        <div class="next-steps">
+            <h5>Complete Your Booking</h5>
+            <ul>
+                <li>Your booking is reserved but not yet confirmed</li>
+                <li>Complete the payment to confirm your booking</li>
+                <li>Your seats will be held for a limited time</li>
+                <li>You'll receive confirmation email after successful payment</li>
+            </ul>
+        </div>
+        {% endif %}
+        
+        <div class="action-buttons">
+            {% if booking.status == 'pending' %}
+                <a href="{% url 'payment' booking.booking_id %}" class="btn btn-primary">
+                    <i class="fas fa-credit-card"></i> Complete Payment
+                </a>
+            {% endif %}
+            <a href="{% url 'my_bookings' %}" class="btn {% if booking.status == 'pending' %}btn-outline-primary{% else %}btn-primary{% endif %}">
+                <i class="fas fa-list"></i> View All Bookings
+            </a>
+            <a href="{% url 'destinations' %}" class="btn btn-outline-primary">
+                <i class="fas fa-search"></i> Explore More Destinations
+            </a>
+            <a href="{% url 'home' %}" class="btn btn-outline-primary">
+                <i class="fas fa-home"></i> Back to Home
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+// Add some confetti effect (optional)
+document.addEventListener('DOMContentLoaded', function() {
+    // Simple celebration animation
+    const icon = document.querySelector('.success-icon i');
+    
+    setTimeout(function() {
+        icon.style.transform = 'scale(1.1)';
+        setTimeout(function() {
+            icon.style.transform = 'scale(1)';
+        }, 200);
+    }, 500);
+});
+</script>
+{% endblock %}

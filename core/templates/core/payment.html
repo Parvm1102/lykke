@@ -1,0 +1,494 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Payment - Lykke{% endblock %}
+
+{% block extra_css %}
+<style>
+    .payment-container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    
+    .booking-summary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 30px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+    
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+        padding: 5px 0;
+    }
+    
+    .summary-total {
+        border-top: 1px solid rgba(255,255,255,0.3);
+        margin-top: 15px;
+        padding-top: 15px;
+        font-size: 1.2em;
+        font-weight: bold;
+    }
+    
+    .payment-form {
+        background: white;
+        border-radius: 15px;
+        padding: 30px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        text-align: center;
+    }
+    
+    .payment-icon {
+        font-size: 4em;
+        color: #667eea;
+        margin-bottom: 20px;
+    }
+    
+    .razorpay-btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        padding: 15px 40px;
+        border-radius: 50px;
+        color: white;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        transition: all 0.3s ease;
+        font-size: 1.1em;
+        cursor: pointer;
+        width: 100%;
+        max-width: 300px;
+    }
+    
+    .razorpay-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+    }
+    
+    .secure-payment {
+        margin-top: 20px;
+        font-size: 0.9em;
+        color: #666;
+    }
+    
+    .secure-payment i {
+        color: #28a745;
+        margin-right: 5px;
+    }
+    
+    .payment-methods {
+        margin-top: 15px;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 10px;
+    }
+    
+    .payment-icons {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        margin-top: 10px;
+        flex-wrap: wrap;
+    }
+    
+    .payment-method-group {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 5px;
+        padding: 10px;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .payment-method-group:hover {
+        background: #f0f0f0;
+        transform: translateY(-2px);
+    }
+    
+    .payment-method-group i {
+        font-size: 1.8em;
+        color: #666;
+        transition: color 0.3s ease;
+    }
+    
+    .method-label {
+        font-size: 0.8em;
+        color: #666;
+        font-weight: 500;
+    }
+    
+    .payment-method-group:hover i,
+    .payment-method-group:hover .method-label {
+        color: #667eea;
+    }
+    
+    .upi-info {
+        background: #e8f5e8;
+        border-radius: 8px;
+        padding: 10px;
+        margin-top: 10px;
+    }
+    
+    .upi-info i {
+        color: #28a745;
+        margin-right: 5px;
+    }
+    
+    .upi-apps {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 8px;
+        flex-wrap: wrap;
+    }
+    
+    .upi-app {
+        background: white;
+        padding: 4px 8px;
+        border-radius: 15px;
+        font-size: 0.75em;
+        border: 1px solid #e0e0e0;
+        color: #666;
+    }
+    
+    .payment-icons i {
+        font-size: 1.5em;
+        color: #666;
+        transition: color 0.3s ease;
+    }
+    
+    .payment-icons i:hover {
+        color: #667eea;
+    }
+    
+    .fa-cc-visa { color: #1a1f71 !important; }
+    .fa-cc-mastercard { color: #eb001b !important; }
+    .fa-cc-amex { color: #006fcf !important; }
+    .fa-university { color: #28a745 !important; }
+    .fa-mobile-alt { color: #ff9800 !important; }
+    .fa-wallet { color: #9c27b0 !important; }
+    
+    .passenger-list {
+        background: #6b46a8ff;
+        border-radius: 10px;
+        padding: 15px;
+        margin: 20px 0;
+    }
+    
+    .passenger-item {
+        padding: 5px 0;
+        border-bottom: 1px solid #dee2e6;
+    }
+    
+    .passenger-item:last-child {
+        border-bottom: none;
+    }
+    
+    .back-btn {
+        background: #6c757d;
+        border: none;
+        padding: 10px 25px;
+        border-radius: 25px;
+        color: white;
+        text-decoration: none;
+        margin-top: 15px;
+        display: inline-block;
+        transition: all 0.3s ease;
+    }
+    
+    .back-btn:hover {
+        background: #5a6268;
+        color: white;
+        text-decoration: none;
+    }
+    
+    .loading-spinner {
+        display: none;
+        margin: 20px 0;
+    }
+    
+    @media (max-width: 768px) {
+        .payment-container {
+            padding: 10px;
+        }
+        
+        .payment-form {
+            padding: 20px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="payment-container">
+    <!-- Booking Summary -->
+    <div class="booking-summary">
+        <h3>Payment Summary</h3>
+        
+        <div class="summary-row">
+            <span>Travel Type:</span>
+            <span>{{ booking.travel_option.get_travel_type_display }}</span>
+        </div>
+        
+        <div class="summary-row">
+            <span>From:</span>
+            <span>{{ booking.travel_option.source }}</span>
+        </div>
+        
+        <div class="summary-row">
+            <span>To:</span>
+            <span>{{ booking.travel_option.destination }}</span>
+        </div>
+        
+        <div class="summary-row">
+            <span>Departure:</span>
+            <span>{{ booking.travel_option.departure_date|date:"M d, Y" }} at {{ booking.travel_option.departure_time }}</span>
+        </div>
+        
+        <div class="summary-row">
+            <span>Arrival:</span>
+            <span>{{ booking.travel_option.arrival_date|date:"M d, Y" }} at {{ booking.travel_option.arrival_time }}</span>
+        </div>
+        
+        <div class="summary-row">
+            <span>Operator:</span>
+            <span>{{ booking.travel_option.operator_name }}</span>
+        </div>
+        
+        <div class="summary-row">
+            <span>Number of Seats:</span>
+            <span>{{ booking.number_of_seats }}</span>
+        </div>
+        
+        <div class="passenger-list">
+            <strong>Passenger Details:</strong>
+            {% for passenger in booking.passengers.all %}
+                <div class="passenger-item">
+                    {{ passenger.first_name }} {{ passenger.last_name }} ({{ passenger.age }} yrs, {{ passenger.get_gender_display }})
+                </div>
+            {% endfor %}
+        </div>
+        
+        <div class="summary-total">
+            <div class="summary-row">
+                <span>Price per seat:</span>
+                <span>₹{{ booking.travel_option.price_per_seat|floatformat:0 }}</span>
+            </div>
+            <div class="summary-row">
+                <span>Total Amount:</span>
+                <span>₹{{ booking.total_price|floatformat:0 }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Form -->
+    <div class="payment-form">
+        <div class="payment-icon">
+            <i class="fas fa-credit-card"></i>
+        </div>
+        
+        <h4>Complete Your Payment</h4>
+        <p class="text-muted">You're just one step away from your amazing journey!</p>
+        
+        <div class="loading-spinner">
+            <div class="spinner-border text-primary" role="status">
+                <span class="sr-only">Processing...</span>
+            </div>
+            <p>Processing your payment...</p>
+        </div>
+        
+        <button id="rzp-button" class="razorpay-btn">
+            <i class="fas fa-mobile-alt"></i> Pay ₹{{ booking.total_price|floatformat:0 }}
+        </button>
+        
+        <p class="text-muted small mt-2">Click to pay via UPI, Cards, Net Banking or Wallets</p>
+        
+        <div class="payment-methods">
+            <p class="text-muted small">Accepted Payment Methods:</p>
+            <div class="payment-icons">
+                <div class="payment-method-group">
+                    <i class="fas fa-mobile-alt" title="UPI"></i>
+                    <span class="method-label">UPI</span>
+                </div>
+                <div class="payment-method-group">
+                    <i class="fab fa-cc-visa" title="Visa"></i>
+                    <span class="method-label">Cards</span>
+                </div>
+                <div class="payment-method-group">
+                    <i class="fas fa-university" title="Net Banking"></i>
+                    <span class="method-label">Banking</span>
+                </div>
+                <div class="payment-method-group">
+                    <i class="fas fa-wallet" title="Wallet"></i>
+                    <span class="method-label">Wallets</span>
+                </div>
+            </div>
+            <div class="upi-info">
+                <p class="text-muted small mt-2">
+                    <i class="fas fa-info-circle"></i>
+                    Pay instantly using Google Pay, PhonePe, Paytm, BHIM or any UPI app
+                </p>
+                <div class="upi-apps">
+                    <span class="upi-app">📱 Google Pay</span>
+                    <span class="upi-app">💜 PhonePe</span>
+                    <span class="upi-app">💙 Paytm</span>
+                    <span class="upi-app">🇮🇳 BHIM</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="secure-payment">
+            <i class="fas fa-shield-alt"></i>
+            Secured by Razorpay | 256-bit SSL Encryption
+        </div>
+        
+        <a href="{% url 'book_travel' booking.travel_option.travel_id %}" class="back-btn">
+            Back to Booking
+        </a>
+    </div>
+</div>
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+document.getElementById('rzp-button').onclick = function(e) {
+    e.preventDefault();
+    
+    // Show loading
+    document.querySelector('.loading-spinner').style.display = 'block';
+    document.getElementById('rzp-button').style.display = 'none';
+    
+    var options = {
+        "key": "{{ razorpay_key_id }}",
+        "amount": {{ booking.total_price|floatformat:0 }}00, // Amount in paise
+        "currency": "INR",
+        "name": "Lykke Travel",
+        "description": "{{ booking.travel_option.operator_name }} - {{ booking.travel_option.get_travel_type_display }}",
+        "image": "{% static 'core/images/logo.png' %}",
+        "order_id": "{{ razorpay_order.id }}",
+        "handler": function (response) {
+            // Payment successful
+            var form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '{% url "payment_success" %}';
+            
+            // Add CSRF token
+            var csrfToken = document.createElement('input');
+            csrfToken.type = 'hidden';
+            csrfToken.name = 'csrfmiddlewaretoken';
+            csrfToken.value = '{{ csrf_token }}';
+            form.appendChild(csrfToken);
+            
+            // Add payment details
+            var paymentId = document.createElement('input');
+            paymentId.type = 'hidden';
+            paymentId.name = 'razorpay_payment_id';
+            paymentId.value = response.razorpay_payment_id;
+            form.appendChild(paymentId);
+            
+            var orderId = document.createElement('input');
+            orderId.type = 'hidden';
+            orderId.name = 'razorpay_order_id';
+            orderId.value = response.razorpay_order_id;
+            form.appendChild(orderId);
+            
+            var signature = document.createElement('input');
+            signature.type = 'hidden';
+            signature.name = 'razorpay_signature';
+            signature.value = response.razorpay_signature;
+            form.appendChild(signature);
+            
+            var bookingId = document.createElement('input');
+            bookingId.type = 'hidden';
+            bookingId.name = 'booking_id';
+            bookingId.value = '{{ booking.booking_id }}';
+            form.appendChild(bookingId);
+            
+            document.body.appendChild(form);
+            form.submit();
+        },
+        "prefill": {
+            "name": "{{ user.get_full_name|default:user.username }}",
+            "email": "{{ user.email }}",
+            "contact": "{{ user.userprofile.phone_number|default:'' }}",
+            "vpa": ""  // UPI VPA can be prefilled if available
+        },
+        "method": {
+            "upi": true,
+            "card": true,
+            "netbanking": true,
+            "wallet": true,
+            "emi": false,
+            "paylater": false
+        },
+        "config": {
+            "display": {
+                "blocks": {
+                    "upi": {
+                        "name": "Pay using UPI",
+                        "instruments": [
+                            {
+                                "method": "upi",
+                                "flows": ["collect", "intent", "qr"]
+                            }
+                        ]
+                    },
+                    "other": {
+                        "name": "Other Payment Methods",
+                        "instruments": [
+                            {
+                                "method": "card"
+                            },
+                            {
+                                "method": "netbanking",
+                                "banks": ["HDFC", "ICICI", "SBI", "AXIS", "YES", "KOTAK", "BOB", "CANARA", "PNB"]
+                            },
+                            {
+                                "method": "wallet",
+                                "wallets": ["paytm", "phonepe", "amazonpay", "freecharge", "mobikwik", "olamoney"]
+                            }
+                        ]
+                    }
+                },
+                "sequence": ["block.upi", "block.other"],
+                "preferences": {
+                    "show_default_blocks": true
+                }
+            }
+        },
+        "notes": {
+            "booking_id": "{{ booking.booking_id }}",
+            "travel_option": "{{ booking.travel_option.operator_name }}"
+        },
+        "theme": {
+            "color": "#667eea"
+        },
+        "modal": {
+            "ondismiss": function() {
+                // Payment cancelled
+                document.querySelector('.loading-spinner').style.display = 'none';
+                document.getElementById('rzp-button').style.display = 'block';
+            }
+        }
+    };
+    
+    var rzp1 = new Razorpay(options);
+    
+    rzp1.on('payment.failed', function (response) {
+        // Payment failed
+        document.querySelector('.loading-spinner').style.display = 'none';
+        document.getElementById('rzp-button').style.display = 'block';
+        
+        alert('Payment failed: ' + response.error.description);
+    });
+    
+    rzp1.open();
+}
+</script>
+{% endblock %}
